@@ -4,7 +4,7 @@ import { useSocket } from "../../context/SocketContext";
 import { useAuth } from "../../context/AuthContext";
 
 export default function AdminDashboard() {
-  const { socket, isConnected } = useSocket();
+  const { socket } = useSocket();
   const { user } = useAuth();
   const [stats, setStats] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
@@ -83,53 +83,13 @@ export default function AdminDashboard() {
         color: 'white',
         boxShadow: '0 4px 20px rgba(102, 126, 234, 0.4)'
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h1 style={{ margin: '0 0 0.5rem 0', fontSize: '2rem', fontWeight: '700' }}>
-              {getGreeting()}, {user?.name}! 👋
-            </h1>
-            <p style={{ margin: 0, fontSize: '1rem', opacity: 0.9 }}>
-              Welcome to your admin dashboard. Here's an overview of your institution.
-            </p>
-          </div>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '1rem',
-            background: 'rgba(255,255,255,0.2)',
-            padding: '1rem 1.5rem',
-            borderRadius: '12px'
-          }}>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '0.85rem', opacity: 0.9, marginBottom: '0.25rem' }}>
-                Connection Status
-              </div>
-              <div style={{ fontSize: '1rem', fontWeight: '600' }}>
-                {isConnected ? (
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span style={{ 
-                      width: '10px', 
-                      height: '10px', 
-                      borderRadius: '50%', 
-                      background: '#4caf50',
-                      boxShadow: '0 0 10px #4caf50'
-                    }}></span>
-                    Live
-                  </span>
-                ) : (
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span style={{ 
-                      width: '10px', 
-                      height: '10px', 
-                      borderRadius: '50%', 
-                      background: '#f44336'
-                    }}></span>
-                    Offline
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
+        <div>
+          <h1 style={{ margin: '0 0 0.5rem 0', fontSize: '2rem', fontWeight: '700' }}>
+            {getGreeting()}, {user?.name}! 👋
+          </h1>
+          <p style={{ margin: 0, fontSize: '1rem', opacity: 0.9 }}>
+            Welcome to your admin dashboard. Here's an overview of your institution.
+          </p>
         </div>
         {lastUpdate && (
           <div style={{ 

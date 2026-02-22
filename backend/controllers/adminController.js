@@ -78,8 +78,24 @@ const updateUser = async (req, res) => {
 // @route DELETE /api/admin/users/:id
 const deleteUser = async (req, res) => {
   try {
-    const user = await User.findByIdAndDelete(req.params.id);
+    const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // If deleting a student, also delete their attendance records
+    if (user.role === 'student') {
+      const Attendance = require('../models/Attendance');
+      await Attendance.deleteMany({ student: req.params.id });
+    }
+
+    // If deleting a faculty, unassign them from subjects
+    if (user.role === 'faculty') {
+      await Subject.updateMany(
+        { assignedFaculty: req.params.id },
+        { $unset: { assignedFaculty: 1 } }
+      );
+    }
+
+    await User.findByIdAndDelete(req.params.id);
     res.json({ message: 'User deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });

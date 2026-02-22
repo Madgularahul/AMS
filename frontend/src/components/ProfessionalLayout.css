@@ -1,0 +1,113 @@
+.professional-layout {
+  margin-left: 280px;
+  min-height: 100vh;
+  background: #f5f7fa;
+  transition: margin-left 0.3s ease;
+}
+
+.professional-main-content {
+  padding: 2rem;
+  margin-top: 60px;
+  min-height: calc(100vh - 60px);
+}
+
+/* Adjust navbar for professional layout */
+.professional-layout .navbar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 280px;
+  z-index: 999;
+  background: #fff;
+  color: #333;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.professional-layout .navbar h2 {
+  color: #1a237e;
+}
+
+.professional-layout .navbar .btn-logout {
+  background: #f44336;
+  border-color: #f44336;
+  color: white;
+}
+
+.professional-layout .navbar .btn-logout:hover {
+  background: #d32f2f;
+}
+
+/* Action Buttons Styling */
+.btn-small {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-small:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.btn-edit {
+  background: #2196f3;
+  color: white;
+  border-color: #2196f3;
+}
+
+.btn-edit:hover {
+  background: #1976d2;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(33,150,243,0.1);
+}
+
+.btn-delete {
+  background: #f44336;
+  color: white;
+  border-color: #f44336;
+}
+
+.btn-delete:hover {
+  background: #d32f2f;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(244,67,54,0.1);
+}
+
+.btn-small:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .professional-layout {
+    margin-left: 0 !important;
+  }
+  
+  .professional-layout .navbar {
+    left: 0 !important;
+    right: 0 !important;
+  }
+  
+  .professional-main-content {
+    padding: 1rem !important;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .professional-layout {
+    margin-left: 70px;
+  }
+  
+  .professional-layout .navbar {
+    left: 70px;
+  }
+  
+  .professional-main-content {
+    padding: 1.5rem;
+  }
+}

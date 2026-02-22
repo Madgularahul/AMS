@@ -11,14 +11,17 @@ const server = http.createServer(app);
 // Socket.io setup with CORS
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin:"*",
     methods: ["GET", "POST"],
     credentials: true
   }
 });
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: "*",
+  credentials: true
+}));
 app.use(express.json());
 
 // Socket.io connection handling

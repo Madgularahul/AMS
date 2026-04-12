@@ -21,7 +21,7 @@ export const SocketProvider = ({ children }) => {
     }
 
     // Connect to Socket.io server
-    const newSocket = io(process.env.REACT_APP_SOCKET_URL || 'http://localhost:5000', {
+    const newSocket = io(process.env.REACT_APP_SOCKET_URL || 'https://ams-ny0y.onrender.com', {
       transports: ['websocket', 'polling']
     });
 

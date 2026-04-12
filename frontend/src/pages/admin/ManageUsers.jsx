@@ -18,18 +18,29 @@ export default function ManageUsers() {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState(null);
   const [msg, setMsg] = useState({ type: "", text: "" });
-  const [filter, setFilter] = useState("");
+  const [filters, setFilters] = useState({
+    role: "",
+    department: "",
+    year: "",
+    semester: "",
+    section: ""
+  });
 
   useEffect(() => {
     fetchUsers();
     fetchDepartments();
     fetchSections();
-  }, [filter]);
+  }, [filters.role, filters.department, filters.year, filters.semester, filters.section]);
 
   const fetchUsers = async () => {
-    const { data } = await api.get(
-      "/admin/users" + (filter ? `?role=${filter}` : "")
-    );
+    const params = new URLSearchParams();
+    if (filters.role) params.append("role", filters.role);
+    if (filters.department) params.append("department", filters.department);
+    if (filters.year) params.append("year", filters.year);
+    if (filters.semester) params.append("semester", filters.semester);
+    if (filters.section) params.append("section", filters.section);
+    
+    const { data } = await api.get(`/admin/users?${params.toString()}`);
     setUsers(data);
   };
 
@@ -266,6 +277,48 @@ export default function ManageUsers() {
               </select>
             </div>
 
+            {(form.role === "student" || form.role === "faculty") && (
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '0.5rem', 
+                  fontWeight: '600',
+                  fontSize: '0.9rem',
+                  color: 'rgba(255,255,255,0.9)'
+                }}>
+                  Department
+                </label>
+                <select
+                  value={form.department}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      department: e.target.value,
+                      section: ""
+                    })
+                  }
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    borderRadius: '8px',
+                    border: '2px solid rgba(255,255,255,0.3)',
+                    background: 'rgba(255,255,255,0.95)',
+                    color: '#333',
+                    fontSize: '1rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="">Select Department</option>
+                  {departments.map((d) => (
+                    <option key={d._id} value={d._id}>
+                      {d.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             {form.role === "student" && (
               <>
                 <div>
@@ -294,46 +347,6 @@ export default function ManageUsers() {
                       fontSize: '1rem'
                     }}
                   />
-                </div>
-
-                <div>
-                  <label style={{ 
-                    display: 'block', 
-                    marginBottom: '0.5rem', 
-                    fontWeight: '600',
-                    fontSize: '0.9rem',
-                    color: 'rgba(255,255,255,0.9)'
-                  }}>
-                    Department
-                  </label>
-                  <select
-                    value={form.department}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        department: e.target.value,
-                        section: ""
-                      })
-                    }
-                    required
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      borderRadius: '8px',
-                      border: '2px solid rgba(255,255,255,0.3)',
-                      background: 'rgba(255,255,255,0.95)',
-                      color: '#333',
-                      fontSize: '1rem',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <option value="">Select Department</option>
-                    {departments.map((d) => (
-                      <option key={d._id} value={d._id}>
-                        {d.name}
-                      </option>
-                    ))}
-                  </select>
                 </div>
 
                 <div>
@@ -418,21 +431,97 @@ export default function ManageUsers() {
       <div className="card">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: 'center', marginBottom: '1rem' }}>
           <h3 style={{ margin: 0 }}>📋 All Users ({users.length})</h3>
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            style={{
-              padding: '0.5rem 1rem',
-              borderRadius: '8px',
-              border: '2px solid #ddd',
-              fontSize: '0.95rem',
-              cursor: 'pointer'
-            }}
-          >
-            <option value="">All Roles</option>
-            <option value="faculty">Faculty Only</option>
-            <option value="student">Students Only</option>
-          </select>
+        </div>
+
+        {/* Filter Bank */}
+        <div style={{ 
+          padding: '1.5rem', 
+          background: '#f8f9fa', 
+          borderRadius: '8px', 
+          marginBottom: '1.5rem', 
+          display: 'flex', 
+          gap: '1rem', 
+          flexWrap: 'wrap',
+          border: '1px solid #e0e0e0'
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: '1', minWidth: '150px' }}>
+            <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#555' }}>Role</label>
+            <select
+              value={filters.role}
+              onChange={(e) => setFilters({...filters, role: e.target.value, department: '', year: '', semester: '', section: ''})}
+              style={{ padding: '0.6rem', borderRadius: '6px', border: '1px solid #ccc' }}
+            >
+              <option value="">All Roles</option>
+              <option value="faculty">Faculty Only</option>
+              <option value="student">Students Only</option>
+            </select>
+          </div>
+
+          {(filters.role === "student" || filters.role === "faculty") && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: '1', minWidth: '150px' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#555' }}>Department</label>
+              <select
+                value={filters.department}
+                onChange={(e) => setFilters({...filters, department: e.target.value, section: ''})}
+                style={{ padding: '0.6rem', borderRadius: '6px', border: '1px solid #ccc' }}
+              >
+                <option value="">All Departments</option>
+                {departments.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
+              </select>
+            </div>
+          )}
+
+          {filters.role === "student" && (
+            <>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: '1', minWidth: '120px' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#555' }}>Year</label>
+                <select
+                  value={filters.year}
+                  onChange={(e) => setFilters({...filters, year: e.target.value, section: ''})}
+                  style={{ padding: '0.6rem', borderRadius: '6px', border: '1px solid #ccc' }}
+                >
+                  <option value="">All Years</option>
+                  <option value="1">Year 1</option>
+                  <option value="2">Year 2</option>
+                  <option value="3">Year 3</option>
+                  <option value="4">Year 4</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: '1', minWidth: '120px' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#555' }}>Semester</label>
+                <select
+                  value={filters.semester}
+                  onChange={(e) => setFilters({...filters, semester: e.target.value, section: ''})}
+                  style={{ padding: '0.6rem', borderRadius: '6px', border: '1px solid #ccc' }}
+                >
+                  <option value="">All Semesters</option>
+                  <option value="1">Semester 1</option>
+                  <option value="2">Semester 2</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: '1', minWidth: '150px' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#555' }}>Specific Section</label>
+                <select
+                  value={filters.section}
+                  onChange={(e) => setFilters({...filters, section: e.target.value})}
+                  style={{ padding: '0.6rem', borderRadius: '6px', border: '1px solid #ccc' }}
+                >
+                  <option value="">All Sections</option>
+                  {sections
+                    .filter(s => (!filters.department || s.department?._id === filters.department) && 
+                                 (!filters.year || s.year === parseInt(filters.year)) &&
+                                 (!filters.semester || s.semester === parseInt(filters.semester)))
+                    .map(s => (
+                    <option key={s._id} value={s._id}>
+                      {s.sectionName} (Y{s.year} S{s.semester})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="table-wrapper">

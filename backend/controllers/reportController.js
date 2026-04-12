@@ -36,7 +36,7 @@ const getAttendanceAnalytics = async (req, res) => {
     // Filter by department if specified
     if (departmentId) {
       attendanceRecords = attendanceRecords.filter(
-        record => record.student?.department?.toString() === departmentId
+        record => (record.student?.department?._id || record.student?.department)?.toString() === departmentId
       );
     }
 
@@ -183,7 +183,7 @@ const generateAttendanceReport = async (req, res) => {
     let filteredRecords = records;
     if (departmentId) {
       filteredRecords = records.filter(
-        r => r.student?.department?.toString() === departmentId
+        r => (r.student?.department?._id || r.student?.department)?.toString() === departmentId
       );
     }
 

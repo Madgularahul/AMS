@@ -30,6 +30,18 @@ export default function ProfessionalSidebar() {
           roles: ['admin']
         },
         {
+          title: 'Bulk Import',
+          icon: '📤',
+          path: '/admin/bulk-import',
+          roles: ['admin']
+        },
+        {
+          title: 'Promote Students',
+          icon: '🎓',
+          path: '/admin/bulk-academic-update',
+          roles: ['admin']
+        },
+        {
           title: 'Departments',
           icon: '🏢',
           path: '/admin/departments',

@@ -15,6 +15,8 @@ export default function ManageDepartments() {
     sectionName: '' 
   });
   const [activeTab, setActiveTab] = useState('departments');
+  const [deptFilter, setDeptFilter] = useState('');
+  const [sectionFilters, setSectionFilters] = useState({ department: '', year: '', semester: '' });
 
   useEffect(() => {
     fetchDepartments();
@@ -121,6 +123,21 @@ export default function ManageDepartments() {
       }
     }
   };
+
+  // Filtered departments (by name or code search)
+  const visibleDepts = departments.filter((d) => {
+    if (!deptFilter) return true;
+    const q = deptFilter.toLowerCase();
+    return d.name.toLowerCase().includes(q) || d.code.toLowerCase().includes(q);
+  });
+
+  // Filtered sections
+  const visibleSections = sections.filter((s) => {
+    if (sectionFilters.department && s.department?._id !== sectionFilters.department) return false;
+    if (sectionFilters.year && String(s.year) !== sectionFilters.year) return false;
+    if (sectionFilters.semester && String(s.semester) !== sectionFilters.semester) return false;
+    return true;
+  });
 
   if (loading) {
     return (
@@ -322,7 +339,16 @@ export default function ManageDepartments() {
           )}
 
           <div className="card">
-            <h3 style={{ marginBottom: '1rem' }}>📋 All Departments ({departments.length})</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ margin: 0 }}>📋 All Departments ({visibleDepts.length})</h3>
+              <input
+                type="text"
+                placeholder="🔍 Search by name or code..."
+                value={deptFilter}
+                onChange={(e) => setDeptFilter(e.target.value)}
+                style={{ padding: '0.5rem 0.9rem', borderRadius: '6px', border: '1px solid #ccc', fontSize: '0.9rem', width: '240px' }}
+              />
+            </div>
             <div className="table-wrapper">
               <table>
                 <thead>
@@ -335,14 +361,14 @@ export default function ManageDepartments() {
                   </tr>
                 </thead>
                 <tbody>
-                  {departments.length === 0 ? (
+                  {visibleDepts.length === 0 ? (
                     <tr>
                       <td colSpan="5" style={{ textAlign: 'center', padding: '3rem', color: '#999' }}>
-                        No departments found. Create your first department above.
+                        No departments match your search.
                       </td>
                     </tr>
                   ) : (
-                    departments.map((dept, i) => (
+                    visibleDepts.map((dept, i) => (
                       <tr key={dept._id} style={{ background: i % 2 === 0 ? '#fafafa' : 'white' }}>
                         <td style={{ textAlign: 'center', color: '#999', fontWeight: '600' }}>{i + 1}</td>
                         <td style={{ fontWeight: '500' }}>{dept.name}</td>
@@ -605,7 +631,60 @@ export default function ManageDepartments() {
           )}
 
           <div className="card">
-            <h3 style={{ marginBottom: '1rem' }}>📋 All Sections ({sections.length})</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ margin: 0 }}>📋 All Sections ({visibleSections.length})</h3>
+            </div>
+
+            {/* Section Filter Bank */}
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', padding: '1rem', background: '#f8f9fa', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #e0e0e0' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: '1', minWidth: '150px' }}>
+                <label style={{ fontSize: '0.82rem', fontWeight: '600', color: '#555' }}>Department</label>
+                <select
+                  value={sectionFilters.department}
+                  onChange={(e) => setSectionFilters({ ...sectionFilters, department: e.target.value })}
+                  style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid #ccc', fontSize: '0.9rem' }}
+                >
+                  <option value="">All Departments</option>
+                  {departments.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
+                </select>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: '1', minWidth: '110px' }}>
+                <label style={{ fontSize: '0.82rem', fontWeight: '600', color: '#555' }}>Year</label>
+                <select
+                  value={sectionFilters.year}
+                  onChange={(e) => setSectionFilters({ ...sectionFilters, year: e.target.value })}
+                  style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid #ccc', fontSize: '0.9rem' }}
+                >
+                  <option value="">All Years</option>
+                  <option value="1">Year 1</option>
+                  <option value="2">Year 2</option>
+                  <option value="3">Year 3</option>
+                  <option value="4">Year 4</option>
+                </select>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: '1', minWidth: '120px' }}>
+                <label style={{ fontSize: '0.82rem', fontWeight: '600', color: '#555' }}>Semester</label>
+                <select
+                  value={sectionFilters.semester}
+                  onChange={(e) => setSectionFilters({ ...sectionFilters, semester: e.target.value })}
+                  style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid #ccc', fontSize: '0.9rem' }}
+                >
+                  <option value="">All Semesters</option>
+                  <option value="1">Semester 1</option>
+                  <option value="2">Semester 2</option>
+                </select>
+              </div>
+              {(sectionFilters.department || sectionFilters.year || sectionFilters.semester) && (
+                <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                  <button
+                    onClick={() => setSectionFilters({ department: '', year: '', semester: '' })}
+                    style={{ padding: '0.5rem 1rem', borderRadius: '6px', border: '1px solid #ccc', background: 'white', cursor: 'pointer', fontSize: '0.85rem', color: '#555' }}
+                  >
+                    ✕ Clear
+                  </button>
+                </div>
+              )}
+            </div>
             <div className="table-wrapper">
               <table>
                 <thead>
@@ -619,14 +698,14 @@ export default function ManageDepartments() {
                   </tr>
                 </thead>
                 <tbody>
-                  {sections.length === 0 ? (
+                  {visibleSections.length === 0 ? (
                     <tr>
                       <td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: '#999' }}>
-                        No sections found. Create your first section above.
+                        No sections match the current filters.
                       </td>
                     </tr>
                   ) : (
-                    sections.map((section, i) => (
+                    visibleSections.map((section, i) => (
                       <tr key={section._id} style={{ background: i % 2 === 0 ? '#fafafa' : 'white' }}>
                         <td style={{ textAlign: 'center', color: '#999', fontWeight: '600' }}>{i + 1}</td>
                         <td style={{ fontWeight: '500' }}>{section.department?.name || 'N/A'}</td>

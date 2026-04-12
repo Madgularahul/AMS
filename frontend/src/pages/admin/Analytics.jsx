@@ -125,25 +125,7 @@ export default function Analytics() {
 
   if (loading) return <div>Loading analytics...</div>;
   
-  // Handle empty data gracefully
-  if (!analytics || analytics.summary.totalRecords === 0) {
-    return (
-      <div>
-        <div className="page-title">Analytics & Reports</div>
-        <div className="card">
-          <div style={{ textAlign: 'center', padding: '3rem', color: '#666' }}>
-            <h3>No Attendance Data Available</h3>
-            <p>Start marking attendance to see analytics and reports.</p>
-            <p style={{ fontSize: '0.9rem', marginTop: '1rem' }}>
-              Use the filters below to set a date range, or wait for attendance records to be created.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const subjectData = analytics.bySubject && analytics.bySubject.length > 0 
+  const subjectData = analytics?.bySubject && analytics.bySubject.length > 0 
     ? analytics.bySubject.map(s => ({
         name: s.name.length > 15 ? s.name.substring(0, 15) + '...' : s.name,
         present: s.present,
@@ -210,7 +192,19 @@ export default function Analytics() {
         </div>
       </div>
 
-      {/* Summary Cards */}
+      {(!analytics || analytics.summary.totalRecords === 0) ? (
+        <div className="card">
+          <div style={{ textAlign: 'center', padding: '3rem', color: '#666' }}>
+            <h3>No Attendance Data Available</h3>
+            <p>Start marking attendance to see analytics and reports.</p>
+            <p style={{ fontSize: '0.9rem', marginTop: '1rem' }}>
+              Use the filters above to set a date range, or wait for attendance records to be created.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Summary Cards */}
       <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
         <div className="stat-card">
           <div className="stat-number">{analytics.summary.totalRecords}</div>
@@ -299,6 +293,8 @@ export default function Analytics() {
             </PieChart>
           </ResponsiveContainer>
         </div>
+      )}
+      </>
       )}
     </div>
   );

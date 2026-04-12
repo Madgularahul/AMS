@@ -11,6 +11,7 @@ export default function ManageSubjects() {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState(null);
   const [msg, setMsg] = useState({ type: '', text: '' });
+  const [subjectFilters, setSubjectFilters] = useState({ department: '', year: '', semester: '', section: '' });
 
   const fetchData = async () => {
     try {
@@ -34,6 +35,20 @@ export default function ManageSubjects() {
   const filteredSections = sections.filter(
     (sec) => sec.department?._id === form.departmentId
   );
+
+  // Sections available for the filter bar (scoped to filter dept)
+  const filterSections = sections.filter(
+    (sec) => !subjectFilters.department || sec.department?._id === subjectFilters.department
+  );
+
+  // Apply table filters
+  const visibleSubjects = subjects.filter((s) => {
+    if (subjectFilters.department && s.department?._id !== subjectFilters.department) return false;
+    if (subjectFilters.year && String(s.year) !== subjectFilters.year) return false;
+    if (subjectFilters.semester && String(s.semester) !== subjectFilters.semester) return false;
+    if (subjectFilters.section && s.section?._id !== subjectFilters.section) return false;
+    return true;
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -155,7 +170,77 @@ export default function ManageSubjects() {
       </div>
 
       <div className="card">
-        <h3>All Subjects</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h3 style={{ margin: 0 }}>📚 All Subjects ({visibleSubjects.length})</h3>
+        </div>
+
+        {/* Filter Bank */}
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', padding: '1rem', background: '#f8f9fa', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #e0e0e0' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: '1', minWidth: '150px' }}>
+            <label style={{ fontSize: '0.82rem', fontWeight: '600', color: '#555' }}>Department</label>
+            <select
+              value={subjectFilters.department}
+              onChange={(e) => setSubjectFilters({ ...subjectFilters, department: e.target.value, section: '' })}
+              style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid #ccc', fontSize: '0.9rem' }}
+            >
+              <option value="">All Departments</option>
+              {departments.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
+            </select>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: '1', minWidth: '110px' }}>
+            <label style={{ fontSize: '0.82rem', fontWeight: '600', color: '#555' }}>Year</label>
+            <select
+              value={subjectFilters.year}
+              onChange={(e) => setSubjectFilters({ ...subjectFilters, year: e.target.value })}
+              style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid #ccc', fontSize: '0.9rem' }}
+            >
+              <option value="">All Years</option>
+              <option value="1">Year 1</option>
+              <option value="2">Year 2</option>
+              <option value="3">Year 3</option>
+              <option value="4">Year 4</option>
+            </select>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: '1', minWidth: '120px' }}>
+            <label style={{ fontSize: '0.82rem', fontWeight: '600', color: '#555' }}>Semester</label>
+            <select
+              value={subjectFilters.semester}
+              onChange={(e) => setSubjectFilters({ ...subjectFilters, semester: e.target.value })}
+              style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid #ccc', fontSize: '0.9rem' }}
+            >
+              <option value="">All Semesters</option>
+              <option value="1">Semester 1</option>
+              <option value="2">Semester 2</option>
+            </select>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: '1', minWidth: '140px' }}>
+            <label style={{ fontSize: '0.82rem', fontWeight: '600', color: '#555' }}>Section</label>
+            <select
+              value={subjectFilters.section}
+              onChange={(e) => setSubjectFilters({ ...subjectFilters, section: e.target.value })}
+              style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid #ccc', fontSize: '0.9rem' }}
+            >
+              <option value="">All Sections</option>
+              {filterSections.map(s => (
+                <option key={s._id} value={s._id}>{s.sectionName} (Y{s.year} S{s.semester})</option>
+              ))}
+            </select>
+          </div>
+
+          {(subjectFilters.department || subjectFilters.year || subjectFilters.semester || subjectFilters.section) && (
+            <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+              <button
+                onClick={() => setSubjectFilters({ department: '', year: '', semester: '', section: '' })}
+                style={{ padding: '0.5rem 1rem', borderRadius: '6px', border: '1px solid #ccc', background: 'white', cursor: 'pointer', fontSize: '0.85rem', color: '#555' }}
+              >
+                ✕ Clear
+              </button>
+            </div>
+          )}
+        </div>
         <div className="table-wrapper">
           <table>
             <thead>
@@ -172,10 +257,10 @@ export default function ManageSubjects() {
               </tr>
             </thead>
             <tbody>
-              {subjects.length === 0 && (
-                <tr><td colSpan={9} style={{ textAlign: 'center', color: '#aaa' }}>No subjects found</td></tr>
+              {visibleSubjects.length === 0 && (
+                <tr><td colSpan={9} style={{ textAlign: 'center', color: '#aaa' }}>No subjects match the current filters</td></tr>
               )}
-              {subjects.map((s, i) => (
+              {visibleSubjects.map((s, i) => (
                 <tr key={s._id}>
                   <td>{i + 1}</td>
                   <td>{s.name}</td>

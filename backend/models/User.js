@@ -28,7 +28,7 @@ const userSchema = new mongoose.Schema(
     department: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Department",
-      required: function() { return this.role === 'student'; }
+      required: function() { return this.role === 'student' || this.role === 'faculty'; }
     },
     rollNumber: {
       type: String,

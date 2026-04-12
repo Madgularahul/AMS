@@ -9,7 +9,10 @@ const departmentSchema = new mongoose.Schema({
   code: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
+    maxlength: [3, 'Department code must be at most 3 characters'],
+    uppercase: true,
+    trim: true
   }
 }, { timestamps: true });
 

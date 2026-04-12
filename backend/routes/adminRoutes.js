@@ -2,16 +2,18 @@ const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/authMiddleware');
 const {
-  getUsers, createUser, updateUser, deleteUser, resetUserPassword, resetUserPasswordByEmail,
+  getUsers, createUser, createBulkUsers, updateUser, deleteUser, resetUserPassword, resetUserPasswordByEmail,
   getSubjects, createSubject, updateSubject, deleteSubject, assignFaculty,
   createDepartment, getDepartments, updateDepartment, deleteDepartment,
   createSection, getSections, updateSection, deleteSection,
-  getDashboardStats
+  getDashboardStats, promoteStudents
 } = require('../controllers/adminController');
 
 router.use(protect, authorize('admin'));
 
 // Users
+router.post('/users/bulk', createBulkUsers);
+router.post('/students/promote', promoteStudents);
 router.route('/users').get(getUsers).post(createUser);
 router.route('/users/:id').put(updateUser).delete(deleteUser);
 router.put('/users/:id/reset-password', resetUserPassword);

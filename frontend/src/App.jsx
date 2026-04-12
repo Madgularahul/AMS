@@ -13,6 +13,8 @@ import ManageDepartments from './pages/admin/ManageDepartments';
 import ManageSubjects from './pages/admin/ManageSubjects';
 import Analytics from './pages/admin/Analytics';
 import SectionReports from './pages/admin/SectionReports';
+import BulkUserImport from './pages/admin/BulkUserImport';
+import BulkAcademicUpdate from './pages/admin/BulkAcademicUpdate';
 
 import FacultyLayout from './pages/faculty/FacultyLayout';
 import FacultyDashboard from './pages/faculty/FacultyDashboard';
@@ -46,6 +48,8 @@ function App() {
             <Route path="subjects" element={<ManageSubjects />} />
             <Route path="analytics" element={<Analytics />} />
             <Route path="section-reports" element={<SectionReports />} />
+            <Route path="bulk-import" element={<BulkUserImport />} />
+            <Route path="bulk-academic-update" element={<BulkAcademicUpdate />} />
             <Route path="settings" element={<Settings />} />
           </Route>
 

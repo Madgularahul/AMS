@@ -11,7 +11,6 @@ const subjectSchema = new mongoose.Schema(
     code: {
       type: String,
       required: [true, 'Subject code is required'],
-      unique: true,
       uppercase: true,
       trim: true,
     },
@@ -43,10 +42,11 @@ const subjectSchema = new mongoose.Schema(
     assignedFaculty: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      default: null,
     },
   },
   { timestamps: true }
 );
+
+subjectSchema.index({ code: 1, section: 1 }, { unique: true });
 
 module.exports = mongoose.model('Subject', subjectSchema);

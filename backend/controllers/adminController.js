@@ -314,11 +314,11 @@ const getSubjects = async (req, res) => {
 // @route POST /api/admin/subjects
 const createSubject = async (req, res) => {
   try {
-    const { name, code, departmentId, year, semester, sectionId, facultyId } = req.body;
+    const { name, code, departmentId, year, semester, sectionIds, facultyId } = req.body;
 
-    if (!departmentId || !year || !semester || !sectionId) {
+    if (!departmentId || !year || !semester || !sectionIds || !Array.isArray(sectionIds) || sectionIds.length === 0) {
       return res.status(400).json({
-        message: "Department, year, semester and section are required"
+        message: "Department, year, semester and at least one section are required"
       });
     }
 
@@ -332,17 +332,35 @@ const createSubject = async (req, res) => {
       }
     }
 
-    const subject = await Subject.create({
-      name,
-      code,
-      department: departmentId,
-      year,
-      semester,
-      section: sectionId,
-      assignedFaculty: facultyId || null
-    });
+    const createdSubjects = [];
+    const errors = [];
 
-    res.status(201).json(subject);
+    for (const sectionId of sectionIds) {
+      try {
+        const subject = await Subject.create({
+          name,
+          code,
+          department: departmentId,
+          year,
+          semester,
+          section: sectionId,
+          assignedFaculty: facultyId || null
+        });
+        createdSubjects.push(subject);
+      } catch (err) {
+        if (err.code === 11000) {
+          errors.push(`A subject with code ${code} already exists for this section.`);
+        } else {
+          errors.push(err.message);
+        }
+      }
+    }
+
+    if (createdSubjects.length === 0) {
+      return res.status(400).json({ message: errors[0] || "Failed to create subjects" });
+    }
+
+    res.status(201).json(createdSubjects[0]); // Return first one for simpler frontend compatibility if needed, or handle array
 
   } catch (error) {
     res.status(500).json({ message: error.message });

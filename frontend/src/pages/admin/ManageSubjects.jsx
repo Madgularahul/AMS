@@ -33,10 +33,10 @@ export default function ManageSubjects() {
   useEffect(() => { fetchData(); }, []);
 
   const filteredSections = sections.filter((sec) => {
-    let matches = form.departmentIds.length === 0 || form.departmentIds.includes(sec.department?._id);
-    if (form.year) matches = matches && String(sec.year) === String(form.year);
-    if (form.semester) matches = matches && String(sec.semester) === String(form.semester);
-    return matches;
+    if (!form.departmentIds.length || !form.year || !form.semester) return false;
+    return form.departmentIds.includes(sec.department?._id) &&
+           String(sec.year) === String(form.year) &&
+           String(sec.semester) === String(form.semester);
   });
 
   const availableFaculty = faculty.filter(
@@ -183,8 +183,10 @@ export default function ManageSubjects() {
             <div className="form-group" style={{ gridColumn: 'span 2' }}>
               <label>Sections (Select one or more)</label>
               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', padding: '0.6rem', border: '1px solid #ddd', borderRadius: '4px', background: '#fff', minHeight: '42px' }}>
-                {filteredSections.length === 0 ? (
-                  <span style={{ color: '#aaa', fontSize: '0.9rem' }}>Select department, year and semester first</span>
+                {(!form.departmentIds.length || !form.year || !form.semester) ? (
+                  <span style={{ color: '#aaa', fontSize: '0.9rem' }}>Select department(s), year and semester first</span>
+                ) : filteredSections.length === 0 ? (
+                  <span style={{ color: '#aaa', fontSize: '0.9rem' }}>No sections found for this combination</span>
                 ) : (
                   filteredSections.map((s) => (
                     <label key={s._id} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.9rem' }}>

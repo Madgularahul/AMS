@@ -32,9 +32,12 @@ export default function ManageSubjects() {
 
   useEffect(() => { fetchData(); }, []);
 
-  const filteredSections = sections.filter(
-    (sec) => sec.department?._id === form.departmentId
-  );
+  const filteredSections = sections.filter((sec) => {
+    let matches = sec.department?._id === form.departmentId;
+    if (form.year) matches = matches && String(sec.year) === String(form.year);
+    if (form.semester) matches = matches && String(sec.semester) === String(form.semester);
+    return matches;
+  });
 
   const availableFaculty = faculty.filter(
     (f) => !form.departmentId || f.department?._id === form.departmentId
@@ -149,9 +152,9 @@ export default function ManageSubjects() {
                   setForm(prev => {
                     const currentFaculty = faculty.find(f => f._id === prev.assignedFaculty);
                     const resetFaculty = prev.assignedFaculty && currentFaculty?.department?._id !== newDeptId;
-                  return { ...prev, departmentId: newDeptId, sectionIds: [], assignedFaculty: resetFaculty ? '' : prev.assignedFaculty };
-                });
-              }} 
+                    return { ...prev, departmentId: newDeptId, sectionIds: [], assignedFaculty: resetFaculty ? '' : prev.assignedFaculty };
+                  });
+                }} 
                 required
               >
                 <option value="">Select Department</option>
@@ -160,11 +163,19 @@ export default function ManageSubjects() {
                 ))}
               </select>
             </div>
+            <div className="form-group">
+              <label>Year</label>
+              <input type="number" min="1" max="4" value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })} required placeholder="1" />
+            </div>
+            <div className="form-group">
+              <label>Semester</label>
+              <input type="number" min="1" max="8" value={form.semester} onChange={(e) => setForm({ ...form, semester: e.target.value })} required placeholder="1" />
+            </div>
             <div className="form-group" style={{ gridColumn: 'span 2' }}>
               <label>Sections (Select one or more)</label>
               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', padding: '0.6rem', border: '1px solid #ddd', borderRadius: '4px', background: '#fff', minHeight: '42px' }}>
                 {filteredSections.length === 0 ? (
-                  <span style={{ color: '#aaa', fontSize: '0.9rem' }}>Select department first</span>
+                  <span style={{ color: '#aaa', fontSize: '0.9rem' }}>Select department, year and semester first</span>
                 ) : (
                   filteredSections.map((s) => (
                     <label key={s._id} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.9rem' }}>
@@ -179,16 +190,6 @@ export default function ManageSubjects() {
                 )}
               </div>
             </div>
-            <div className="form-group">
-              <label>Year</label>
-              <input type="number" min="1" max="4" value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })} required placeholder="1" />
-            </div>
-            <div className="form-group">
-              <label>Semester</label>
-              <input type="number" min="1" max="8" value={form.semester} onChange={(e) => setForm({ ...form, semester: e.target.value })} required placeholder="1" />
-            </div>
-            </div>
-
             <div className="form-group">
               <label>Assign Faculty (optional)</label>
               <select value={form.assignedFaculty} onChange={(e) => setForm({ ...form, assignedFaculty: e.target.value })}>

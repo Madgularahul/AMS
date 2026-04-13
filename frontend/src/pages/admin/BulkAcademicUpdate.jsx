@@ -11,6 +11,7 @@ export default function BulkAcademicUpdate() {
   const [selectedSection, setSelectedSection] = useState('');
 
   const [preview, setPreview] = useState(null);   // list of students to be affected
+  const [selectedStudentIds, setSelectedStudentIds] = useState([]);
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [promoting, setPromoting] = useState(false);
   const [result, setResult] = useState(null);
@@ -48,6 +49,7 @@ export default function BulkAcademicUpdate() {
     try {
       const { data } = await api.get(`/admin/users?role=student&section=${selectedSection}`);
       setPreview(data);
+      setSelectedStudentIds(data.map(s => s._id)); // Default to all selected
     } catch (err) {
       setError('Failed to load student preview.');
     } finally {
@@ -56,14 +58,22 @@ export default function BulkAcademicUpdate() {
   };
 
   const handlePromote = async () => {
-    if (!window.confirm(`This will promote ${preview.length} student(s). Are you sure?`)) return;
+    if (selectedStudentIds.length === 0) {
+      alert('Please select at least one student to promote.');
+      return;
+    }
+    if (!window.confirm(`This will promote ${selectedStudentIds.length} selected student(s). Are you sure?`)) return;
     setPromoting(true);
     setResult(null);
     setError('');
     try {
-      const { data } = await api.post('/admin/students/promote', { sectionId: selectedSection });
+      const { data } = await api.post('/admin/students/promote', { 
+        sectionId: selectedSection,
+        studentIds: selectedStudentIds 
+      });
       setResult(data);
       setPreview(null);
+      setSelectedStudentIds([]);
       // Refresh sections list (new section may have been created)
       const r = await api.get('/admin/sections');
       setSections(r.data);
@@ -72,6 +82,22 @@ export default function BulkAcademicUpdate() {
     } finally {
       setPromoting(false);
     }
+  };
+
+  const toggleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedStudentIds(preview.map(s => s._id));
+    } else {
+      setSelectedStudentIds([]);
+    }
+  };
+
+  const toggleStudentSelect = (studentId) => {
+    setSelectedStudentIds(prev => 
+      prev.includes(studentId) 
+        ? prev.filter(id => id !== studentId) 
+        : [...prev, studentId]
+    );
   };
 
   const resetAll = () => {
@@ -193,20 +219,20 @@ export default function BulkAcademicUpdate() {
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h3 style={{ margin: 0 }}>
-              Step 2 — Preview ({preview.length} student{preview.length !== 1 ? 's' : ''} will be promoted)
+              Step 2 — Preview ({selectedStudentIds.length} of {preview.length} selected)
             </h3>
             <button
               onClick={handlePromote}
-              disabled={promoting || preview.length === 0}
+              disabled={promoting || selectedStudentIds.length === 0}
               style={{
                 padding: '0.75rem 1.75rem', borderRadius: '8px', border: 'none',
-                background: preview.length === 0 ? '#ccc' : 'linear-gradient(135deg, #43a047 0%, #1b5e20 100%)',
+                background: selectedStudentIds.length === 0 ? '#ccc' : 'linear-gradient(135deg, #43a047 0%, #1b5e20 100%)',
                 color: 'white', fontWeight: '700', fontSize: '1rem',
-                cursor: preview.length === 0 ? 'not-allowed' : 'pointer',
+                cursor: selectedStudentIds.length === 0 ? 'not-allowed' : 'pointer',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
               }}
             >
-              {promoting ? 'Promoting...' : '🚀 Confirm & Promote All'}
+              {promoting ? 'Promoting...' : `🚀 Promote Selected (${selectedStudentIds.length})`}
             </button>
           </div>
 
@@ -219,6 +245,14 @@ export default function BulkAcademicUpdate() {
               <table>
                 <thead>
                   <tr>
+                    <th style={{ width: '40px' }}>
+                      <input 
+                        type="checkbox" 
+                        onChange={toggleSelectAll} 
+                        checked={preview.length > 0 && selectedStudentIds.length === preview.length}
+                        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                      />
+                    </th>
                     <th style={{ width: '50px' }}>#</th>
                     <th>Name</th>
                     <th>Email</th>
@@ -233,6 +267,14 @@ export default function BulkAcademicUpdate() {
                     const nextYear = selectedSem === '2' ? parseInt(selectedYear) + 1 : parseInt(selectedYear);
                     return (
                       <tr key={s._id} style={{ background: i % 2 === 0 ? '#fafafa' : 'white' }}>
+                        <td style={{ textAlign: 'center' }}>
+                          <input 
+                            type="checkbox" 
+                            checked={selectedStudentIds.includes(s._id)}
+                            onChange={() => toggleStudentSelect(s._id)}
+                            style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                          />
+                        </td>
                         <td style={{ textAlign: 'center', color: '#999' }}>{i + 1}</td>
                         <td style={{ fontWeight: '500' }}>{s.name}</td>
                         <td style={{ color: '#666' }}>{s.email}</td>

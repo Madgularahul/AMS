@@ -576,7 +576,7 @@ const deleteSection = async (req, res) => {
 // @route POST /api/admin/students/promote
 const promoteStudents = async (req, res) => {
   try {
-    const { sectionId } = req.body;
+    const { sectionId, studentIds } = req.body;
     if (!sectionId) return res.status(400).json({ message: 'sectionId is required' });
 
     const currentSection = await Section.findById(sectionId);
@@ -615,15 +615,21 @@ const promoteStudents = async (req, res) => {
       });
     }
 
-    // Find all students in current section
-    const students = await User.find({ role: 'student', section: sectionId });
-    if (students.length === 0) {
-      return res.status(200).json({ message: 'No students found in this section. Nothing was updated.', updatedCount: 0 });
+    // Build the query to find students to promote
+    const filter = { role: 'student', section: sectionId };
+    if (studentIds && Array.isArray(studentIds) && studentIds.length > 0) {
+      filter._id = { $in: studentIds };
+    }
+
+    // Find the students to ensure we have something to update
+    const studentsToPromote = await User.find(filter);
+    if (studentsToPromote.length === 0) {
+      return res.status(200).json({ message: 'No students found matching selection. Nothing was updated.', updatedCount: 0 });
     }
 
     // Move students to target section
     const result = await User.updateMany(
-      { role: 'student', section: sectionId },
+      filter,
       { $set: { section: targetSection._id } }
     );
 

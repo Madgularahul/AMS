@@ -36,6 +36,10 @@ export default function ManageSubjects() {
     (sec) => sec.department?._id === form.departmentId
   );
 
+  const availableFaculty = faculty.filter(
+    (f) => !form.departmentId || f.department?._id === form.departmentId
+  );
+
   // Sections available for the filter bar (scoped to filter dept)
   const filterSections = sections.filter(
     (sec) => !subjectFilters.department || sec.department?._id === subjectFilters.department
@@ -122,7 +126,18 @@ export default function ManageSubjects() {
             </div>
             <div className="form-group">
               <label>Department</label>
-              <select value={form.departmentId} onChange={(e) => setForm({ ...form, departmentId: e.target.value, sectionId: '' })} required>
+              <select 
+                value={form.departmentId} 
+                onChange={(e) => {
+                  const newDeptId = e.target.value;
+                  setForm(prev => {
+                    const currentFaculty = faculty.find(f => f._id === prev.assignedFaculty);
+                    const resetFaculty = prev.assignedFaculty && currentFaculty?.department?._id !== newDeptId;
+                    return { ...prev, departmentId: newDeptId, sectionId: '', assignedFaculty: resetFaculty ? '' : prev.assignedFaculty };
+                  });
+                }} 
+                required
+              >
                 <option value="">Select Department</option>
                 {departments.map((d) => (
                   <option key={d._id} value={d._id}>{d.name}</option>
@@ -152,7 +167,7 @@ export default function ManageSubjects() {
               <label>Assign Faculty (optional)</label>
               <select value={form.assignedFaculty} onChange={(e) => setForm({ ...form, assignedFaculty: e.target.value })}>
                 <option value="">-- Unassigned --</option>
-                {faculty.map((f) => (
+                {availableFaculty.map((f) => (
                   <option key={f._id} value={f._id}>{f.name}</option>
                 ))}
               </select>

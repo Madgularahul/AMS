@@ -322,6 +322,16 @@ const createSubject = async (req, res) => {
       });
     }
 
+    if (facultyId) {
+      const facultyObj = await User.findById(facultyId);
+      if (!facultyObj || facultyObj.role !== 'faculty') {
+        return res.status(400).json({ message: "Invalid faculty selected" });
+      }
+      if (facultyObj.department.toString() !== departmentId.toString()) {
+        return res.status(400).json({ message: "Teacher must be from the same department as the subject" });
+      }
+    }
+
     const subject = await Subject.create({
       name,
       code,
@@ -342,6 +352,19 @@ const createSubject = async (req, res) => {
 const updateSubject = async (req, res) => {
   try {
     const { name, code, departmentId, year, semester, sectionId, facultyId } = req.body;
+    const subjectToUpdate = await Subject.findById(req.params.id);
+    if (!subjectToUpdate) return res.status(404).json({ message: 'Subject not found' });
+
+    const targetDeptId = departmentId || subjectToUpdate.department;
+    const targetFacultyId = facultyId !== undefined ? facultyId : subjectToUpdate.assignedFaculty;
+
+    if (targetFacultyId) {
+      const facultyObj = await User.findById(targetFacultyId);
+      if (facultyObj && facultyObj.department.toString() !== targetDeptId.toString()) {
+        return res.status(400).json({ message: "Teacher must be from the same department as the subject" });
+      }
+    }
+
     const updateData = {};
     if (name) updateData.name = name;
     if (code) updateData.code = code;
@@ -377,17 +400,25 @@ const deleteSubject = async (req, res) => {
 const assignFaculty = async (req, res) => {
   try {
     const { facultyId } = req.body;
-    const faculty = await User.findOne({ _id: facultyId, role: 'faculty' });
-    if (!faculty) return res.status(404).json({ message: 'Faculty not found' });
+    const subject = await Subject.findById(req.params.id);
+    if (!subject) return res.status(404).json({ message: 'Subject not found' });
 
-    const subject = await Subject.findByIdAndUpdate(
+    if (facultyId) {
+      const faculty = await User.findOne({ _id: facultyId, role: 'faculty' });
+      if (!faculty) return res.status(404).json({ message: 'Faculty not found' });
+
+      if (faculty.department.toString() !== subject.department.toString()) {
+        return res.status(400).json({ message: 'Teacher must be from the same department as the subject' });
+      }
+    }
+
+    const updatedSubject = await Subject.findByIdAndUpdate(
       req.params.id,
-      { assignedFaculty: facultyId },
+      { assignedFaculty: facultyId || null },
       { new: true }
     ).populate('assignedFaculty', 'name email');
 
-    if (!subject) return res.status(404).json({ message: 'Subject not found' });
-    res.json(subject);
+    res.json(updatedSubject);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

@@ -314,21 +314,19 @@ const getSubjects = async (req, res) => {
 // @route POST /api/admin/subjects
 const createSubject = async (req, res) => {
   try {
-    const { name, code, departmentId, year, semester, sectionIds, facultyId } = req.body;
+    const { name, code, year, semester, sectionIds, facultyId } = req.body;
 
-    if (!departmentId || !year || !semester || !sectionIds || !Array.isArray(sectionIds) || sectionIds.length === 0) {
+    if (!year || !semester || !sectionIds || !Array.isArray(sectionIds) || sectionIds.length === 0) {
       return res.status(400).json({
-        message: "Department, year, semester and at least one section are required"
+        message: "Year, semester, and at least one section are required."
       });
     }
 
+    let facultyObj = null;
     if (facultyId) {
-      const facultyObj = await User.findById(facultyId);
+      facultyObj = await User.findById(facultyId);
       if (!facultyObj || facultyObj.role !== 'faculty') {
-        return res.status(400).json({ message: "Invalid faculty selected" });
-      }
-      if (facultyObj.department.toString() !== departmentId.toString()) {
-        return res.status(400).json({ message: "Teacher must be from the same department as the subject" });
+        return res.status(400).json({ message: "Invalid faculty selected." });
       }
     }
 
@@ -337,14 +335,32 @@ const createSubject = async (req, res) => {
 
     for (const sectionId of sectionIds) {
       try {
+        const sectionObj = await Section.findById(sectionId);
+        if (!sectionObj) {
+          errors.push(`Section ${sectionId} not found.`);
+          continue;
+        }
+
+        const derivedDeptId = sectionObj.department;
+        let finalFacultyId = null;
+
+        if (facultyObj) {
+          if (facultyObj.department.toString() === derivedDeptId.toString()) {
+            finalFacultyId = facultyId;
+          } else {
+            // Do not fail the entire request, just leave teacher unassigned for this mismatched section
+            errors.push(`Faculty skipped for section ${sectionObj.sectionName} (department mismatch).`);
+          }
+        }
+
         const subject = await Subject.create({
           name,
           code,
-          department: departmentId,
+          department: derivedDeptId,
           year,
           semester,
           section: sectionId,
-          assignedFaculty: facultyId || null
+          assignedFaculty: finalFacultyId
         });
         createdSubjects.push(subject);
       } catch (err) {

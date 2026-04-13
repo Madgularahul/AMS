@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../../utils/api';
 
-const emptyForm = { name: '', code: '', departmentId: '', year: '', semester: '', sectionIds: [], assignedFaculty: '' };
+const emptyForm = { name: '', code: '', departmentIds: [], year: '', semester: '', sectionIds: [], assignedFaculty: '' };
 
 export default function ManageSubjects() {
   const [subjects, setSubjects] = useState([]);
@@ -33,14 +33,14 @@ export default function ManageSubjects() {
   useEffect(() => { fetchData(); }, []);
 
   const filteredSections = sections.filter((sec) => {
-    let matches = sec.department?._id === form.departmentId;
+    let matches = form.departmentIds.length === 0 || form.departmentIds.includes(sec.department?._id);
     if (form.year) matches = matches && String(sec.year) === String(form.year);
     if (form.semester) matches = matches && String(sec.semester) === String(form.semester);
     return matches;
   });
 
   const availableFaculty = faculty.filter(
-    (f) => !form.departmentId || f.department?._id === form.departmentId
+    (f) => form.departmentIds.length === 0 || form.departmentIds.includes(f.department?._id)
   );
 
   // Sections available for the filter bar (scoped to filter dept)
@@ -56,6 +56,20 @@ export default function ManageSubjects() {
     if (subjectFilters.section && s.section?._id !== subjectFilters.section) return false;
     return true;
   });
+
+  const handleDepartmentToggle = (id) => {
+    setForm(prev => {
+      if (editId) return { ...prev, departmentIds: [id] }; // Single select in edit mode
+      const ids = prev.departmentIds.includes(id)
+        ? prev.departmentIds.filter(i => i !== id)
+        : [...prev.departmentIds, id];
+      
+      const currentFaculty = faculty.find(f => f._id === prev.assignedFaculty);
+      const isFacultyValid = currentFaculty && ids.includes(currentFaculty.department?._id);
+      
+      return { ...prev, departmentIds: ids, sectionIds: [], assignedFaculty: isFacultyValid ? prev.assignedFaculty : '' };
+    });
+  };
 
   const handleSectionToggle = (id) => {
     setForm(prev => {
@@ -78,7 +92,6 @@ export default function ManageSubjects() {
       const payload = {
         name: form.name,
         code: form.code,
-        departmentId: form.departmentId,
         year: parseInt(form.year),
         semester: parseInt(form.semester),
         facultyId: form.assignedFaculty || null
@@ -86,6 +99,7 @@ export default function ManageSubjects() {
 
       if (editId) {
         payload.sectionId = form.sectionIds[0];
+        payload.departmentId = form.departmentIds[0];
         await api.put(`/admin/subjects/${editId}`, payload);
         setMsg({ type: 'success', text: 'Subject updated!' });
       } else {
@@ -106,7 +120,7 @@ export default function ManageSubjects() {
     setForm({
       name: s.name,
       code: s.code,
-      departmentId: s.department?._id || '',
+      departmentIds: [s.department?._id || ''],
       year: s.year || '',
       semester: s.semester || '',
       sectionIds: [s.section?._id || ''],
@@ -143,25 +157,20 @@ export default function ManageSubjects() {
               <label>Subject Code</label>
               <input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })} required placeholder="MATH101" />
             </div>
-            <div className="form-group">
-              <label>Department</label>
-              <select 
-                value={form.departmentId} 
-                onChange={(e) => {
-                  const newDeptId = e.target.value;
-                  setForm(prev => {
-                    const currentFaculty = faculty.find(f => f._id === prev.assignedFaculty);
-                    const resetFaculty = prev.assignedFaculty && currentFaculty?.department?._id !== newDeptId;
-                    return { ...prev, departmentId: newDeptId, sectionIds: [], assignedFaculty: resetFaculty ? '' : prev.assignedFaculty };
-                  });
-                }} 
-                required
-              >
-                <option value="">Select Department</option>
+            <div className="form-group" style={{ gridColumn: 'span 2' }}>
+              <label>Departments (Select one or more)</label>
+              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', padding: '0.6rem', border: '1px solid #ddd', borderRadius: '4px', background: '#fff', minHeight: '42px' }}>
                 {departments.map((d) => (
-                  <option key={d._id} value={d._id}>{d.name}</option>
+                  <label key={d._id} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.9rem' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={form.departmentIds.includes(d._id)} 
+                      onChange={() => handleDepartmentToggle(d._id)}
+                    />
+                    {d.code || d.name}
+                  </label>
                 ))}
-              </select>
+              </div>
             </div>
             <div className="form-group">
               <label>Year</label>
@@ -184,7 +193,7 @@ export default function ManageSubjects() {
                         checked={form.sectionIds.includes(s._id)} 
                         onChange={() => handleSectionToggle(s._id)}
                       />
-                      {s.sectionName}
+                      {s.department?.code || s.department?.name} - {s.sectionName}
                     </label>
                   ))
                 )}

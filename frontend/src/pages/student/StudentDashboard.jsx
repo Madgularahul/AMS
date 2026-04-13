@@ -64,7 +64,11 @@ export default function StudentDashboard() {
   }, [socket]);
 
   const overall = percentages.length
-    ? (percentages.reduce((sum, s) => sum + parseFloat(s.percentage), 0) / percentages.length).toFixed(2)
+    ? (() => {
+        const totalPresent = percentages.reduce((sum, s) => sum + s.presentCount, 0);
+        const totalClasses = percentages.reduce((sum, s) => sum + s.totalClasses, 0);
+        return totalClasses > 0 ? ((totalPresent / totalClasses) * 100).toFixed(2) : '0.00';
+      })()
     : 0;
 
   const getBarClass = (pct) => {
